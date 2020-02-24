@@ -36,10 +36,11 @@ $httpClient.get('https://tc.vip.iqiyi.com/taskCenter/task/queryUserTask?autoSign
         var quantity = obj.data.signInfo.data.rewards[0].value;
         var continued = obj.data.signInfo.data.continueSignDaysSum;
         $notification.post("爱奇艺签到", "", status + "！获得" + AwardName + quantity + ", 已连续签到" + continued + "天 🎉");
-      } else {
+      }//sucess
+      else {
         console.log("failure response: \n" + data);
-        $notification.post("爱奇艺签到", "", "失败, " + obj.data.signInfo.msg + "⚠️");
-      }
+        $notification.post("爱奇艺签到", "", "成功, " + obj.data.signInfo.msg + "⚠️");
+      }//sucess but duplicate
     } else {
       $notification.post("爱奇艺签到,Cookie无效‼️‼️", "", data);
     }
