@@ -55,7 +55,7 @@ QX 或 Surge 或 Loon MITM = api.m.jd.com
 ~~~~~~~~~~~~~~~~
 */
 
-var log = true; //是否开启日志, false则关闭
+var log = false; //是否开启日志, false则关闭
 var stop = 0; //自定义延迟签到,单位毫秒,(如填200则每个接口延迟0.2秒执行),默认无延迟
 var $nobyda = nobyda();
 
@@ -84,7 +84,7 @@ async function all() {//签到模块相互独立,您可注释某一行以禁用�
   await JingRongGame(stop); //金融游戏大厅
   await JingDongLive(stop); //京东智能生活馆
   await JingDongClean(stop); //京东清洁馆
-  await JDPersonalCare(stop); //京东个人护理馆
+  //await JDPersonalCare(stop); //京东个人护理馆
   await JingDongPrize(stop); //京东抽大奖
   await JingDongShake(stop); //京东摇一摇
 
