@@ -75,6 +75,7 @@ hostname = api.m.jd.com
 *************************/
 
 var log = false; //是否开启日志, false则关闭
+
 var stop = 0; //自定义延迟签到,单位毫秒,(如填200则每个接口延迟0.2秒执行),默认无延迟
 
 var DeleteCookie = false; //是否清除Cookie, true则开启
@@ -104,9 +105,7 @@ async function all() {//签到模块相互独立,您可注释某一行以禁用�
   await JingRongGame(stop); //金融游戏大厅
   await JingDongLive(stop); //京东智能生活馆
   await JingDongClean(stop); //京东清洁馆
-  //await JDPersonalCare(stop); //京东个人护理馆
-  await JingDongPrize(stop); //京东抽大奖
-  await JingDongShake(stop); //京东摇一摇
+  await JDPersonalCare(stop); //京东个人护理馆
   await Promise.all([
     TotalSteel(), //总钢镚查询
     TotalCash(), //总红包查询
@@ -135,13 +134,15 @@ var merge = {
   JDCare:  {success:0,fail:0,bean:0,steel:0,notify:''},
   JDFood:  {success:0,fail:0,bean:0,steel:0,notify:''},
   JDClean: {success:0,fail:0,bean:0,steel:0,notify:''},
-  JDPrize: {success:0,fail:0,bean:0,steel:0,notify:'',key:0},  //await JDPersonalCare(stop); //京东个人护理馆
-  await JingDongPrize(stop); //京东抽大奖
-  await JingDongShake(stop); //京东摇一摇
->>>>>>>+master
-,bean:0,  await JDPersonalCare(stop); //京东个人护理馆
->>>>>>>-upstream/master
-omise(resolve => {
+  JDPrize: {success:0,fail:0,bean:0,steel:0,notify:'',key:0},
+  JRSteel: {success:0,fail:0,bean:0,steel:0,notify:'',TSteel:0},
+  JDCash:  {success:0,fail:0,bean:0,steel:0,notify:'',Cash:0,TCash:0},
+  JDShake: {success:0,fail:0,bean:0,steel:0,notify:'',Qbear:0,nackname:''}
+}
+
+function notify() {
+
+  return new Promise(resolve => {
     try {
       var bean = 0;
       var steel = 0;
