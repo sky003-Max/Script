@@ -1,106 +1,104 @@
-/*
-爱奇艺会员签到脚本
+//v3
 
-更新时间: 2020.5.6 23:00
-脚本兼容: QuantumultX, Surge4, Loon
-电报频道: @NobyDa
-问题反馈: @NobyDa_bot
-
-获取Cookie说明：
-打开爱奇艺App后(AppStore中国区)，点击"我的", 如通知成功获取cookie, 则可以使用此签到脚本.
-获取Cookie后, 您可以手动将主机名移除，以免产生不必要的MITM.
-脚本将在每天上午9:00执行, 您可以修改执行时间。
-
-**********************
-QuantumultX 脚本配置:
-**********************
-[task_local]
-# 爱奇艺会员签到
-# 注意此为本地路径, 请根据实际情况自行调整.
-0 9 * * * iQIYI.js
-
-[rewrite_local]
-# 获取Cookie
-# 注意此为本地路径, 请根据实际情况自行调整.
-https?:\/\/.*\.iqiyi\.com\/.*authcookie= url script-request-header iQIYI.js
-
-# MITM = *.iqiyi.com
-
-**********************
-Surge4 或 Loon 脚本配置:
-**********************
-[Script]
-# 爱奇艺会员签到
-cron "0 9 * * *" script-path=https://raw.githubusercontent.com/NobyDa/Script/master/iQIYI-DailyBonus/iQIYI.js
-
-# 获取Cookie
-http-request https?:\/\/.*\.iqiyi\.com\/.*authcookie= script-path=https://raw.githubusercontent.com/NobyDa/Script/master/iQIYI-DailyBonus/iQIYI.js
-
-# MITM = *.iqiyi.com
-*/
 var $nobyda = nobyda()
-var done = $nobyda.done()
+var dnotify = $nobyda.done()
+var notify = {}
 if ($nobyda.isRequest) {
   GetCookie()
 } else {
-  Checkin()
+  all()
+}
+async function all() {
+  await Checkin();
+  await login();
+  await Lottery();
 }
 
 function Checkin() {
-  var URL = {
-    url: 'https://tc.vip.iqiyi.com/taskCenter/task/queryUserTask?autoSign=yes&P00001=' + $nobyda.read("CookieQY"),
-  }
-  $nobyda.get(URL, function(error, response, data) {
-    if (error) {
-      notify = "签到失败: 接口请求出错 ‼️"
-      console.log("爱奇艺会员签到失败:\n" + error)
-    } else {
-      var obj = JSON.parse(data)
-      if (obj.msg == "成功") {
-        if (obj.data.signInfo.code == "A00000") {
-          var AwardName = obj.data.signInfo.data.rewards[0].name;
-          var quantity = obj.data.signInfo.data.rewards[0].value;
-          var continued = obj.data.signInfo.data.continueSignDaysSum;
-          var notify = "签到成功: " + AwardName + quantity + ", 已连签" + continued + "天 🎉"
-        } else {
-          var notify = "签到失败: " + obj.data.signInfo.msg + " ⚠️"
-        }
-      } else {
-        var notify = "签到失败: Cookie失效 ‼️"
-      }
+  return new Promise(resolve => {
+    var URL = {
+      url: 'https://tc.vip.iqiyi.com/taskCenter/task/queryUserTask?autoSign=yes&P00001=' + $nobyda.read("CookieQY")
     }
-    Lottery(notify)
-  })
+    $nobyda.get(URL, function(error, response, data) {
+      if (error) {
+        notify = "签到失败: 接口请求出错 ‼️"
+        console.log("爱奇艺会员签到失败:\n" + error)
+      } else {
+        var obj = JSON.parse(data)
+        if (obj.msg == "成功") {
+          if (obj.data.signInfo.code == "A00000") {
+            var AwardName = obj.data.signInfo.data.rewards[0].name;
+            var quantity = obj.data.signInfo.data.rewards[0].value;
+            var continued = obj.data.signInfo.data.continueSignDaysSum;
+            notify = "签到成功: " + AwardName + quantity + ", 已连签" + continued + "天 🎉"
+          } else {
+            notify = "签到失败: " + obj.data.signInfo.msg + " ⚠️"
+          }
+        } else {
+          notify = "签到失败: Cookie无效 ⚠️"
+        }
+      }
+      resolve()
+    })
+  });
 }
 
-function Lottery(one) {
-  var URL = {
-    url: 'https://iface2.iqiyi.com/aggregate/3.0/lottery_activity?app_k=0&app_v=0&platform_id=0&dev_os=0&dev_ua=0&net_sts=0&qyid=0&psp_uid=0&psp_cki=' + $nobyda.read("CookieQY") + '&psp_status=0&secure_p=0&secure_v=0&req_sn=0'
-  }
-  $nobyda.get(URL, function(error, response, data) {
-    if (error) {
-      one += "\n抽奖失败: 接口请求出错 ‼️"
-      console.log("爱奇艺会员抽奖失败:\n" + error)
-      $nobyda.notify("爱奇艺", "", one)
-    } else {
-      var obj = JSON.parse(data);
-      if (obj.title && obj.code == 0) {
-        one += "\n抽奖成功: " + obj.awardName.replace(/《.+》/, "未中奖") + " 🎉"
-      } else if (data.match(/机会用完/)) {
-        one += "\n抽奖失败: 今日已转过 ⚠️"
-      } else if (data.match(/(未登录|不存在)/)) {
-        one += "\n抽奖失败: Cookie失效 ‼️"
-      } else {
-        one += "\n抽奖错误: 已输出日志 ⚠️"
-        console.log("爱奇艺会员抽奖失败:\n" + data)
-      }
-      if (data.match(/\"daysurpluschance\":\"(1|2)\"/)) {
-        Lottery(one)
-      } else {
-        $nobyda.notify("爱奇艺", "", one)
+function login() {
+  return new Promise(resolve => {
+    var URL = {
+      url: 'https://cards.iqiyi.com/views_category/3.0/vip_home?secure_p=iPhone&scrn_scale=0&dev_os=0&ouid=0&layout_v=6&psp_cki=' + $nobyda.read("CookieQY") + '&page_st=suggest&app_k=8e48946f144759d86a50075555fd5862&dev_ua=iPhone8%2C2&net_sts=1&cupid_uid=0&xas=1&init_type=6&app_v=11.4.5&idfa=0&app_t=0&platform_id=0&layout_name=0&req_sn=0&api_v=0&psp_status=0&psp_uid=451953037415627&qyid=0&secure_v=0&req_times=0',
+      headers: {
+        sign: '7fd8aadd90f4cfc99a858a4b087bcc3a',
+        t: '479112291'
       }
     }
-  })
+    $nobyda.get(URL, function(error, response, data) {
+      if (error) {
+        notify += "\n登录失败: 接口请求出错 ‼️"
+        console.log("爱奇艺会员登录失败:\n" + error)
+      } else if (data.match(/\"text\":\"\d.+?\u5230\u671f\"/)) {
+        notify += "\n登录成功: " + data.match(/\"text\":\"(\d.+?\u5230\u671f)\"/)[1]
+      } else if (data.match(/\"text\":\"\u7acb\u5373\u5f00\u901a\u4f1a\u5458\"/)) {
+        notify += "\n登录失败: 用户不是会员 ⚠️"
+      } else {
+        notify += "\n登录失败: 未知错误 ⚠️"
+        console.log("爱奇艺会员登录失败:\n" + data)
+      }
+      resolve()
+    })
+  });
+}
+
+function Lottery() {
+  return new Promise(resolve => {
+    var URL = {
+      url: 'https://iface2.iqiyi.com/aggregate/3.0/lottery_activity?app_k=0&app_v=0&platform_id=0&dev_os=0&dev_ua=0&net_sts=0&qyid=0&psp_uid=0&psp_cki=' + $nobyda.read("CookieQY") + '&psp_status=0&secure_p=0&secure_v=0&req_sn=0'
+    }
+    $nobyda.get(URL, function(error, response, data) {
+      if (error) {
+        notify += "\n抽奖失败: 接口请求出错 ‼️"
+        console.log("爱奇艺会员抽奖失败:\n" + error)
+        $nobyda.notify("爱奇艺", "", notify)
+      } else {
+        var obj = JSON.parse(data);
+        if (obj.awardName && obj.code == 0) {
+          notify += "\n抽奖成功: " + obj.awardName.replace(/《.+》/, "未中奖") + " 🎉"
+        } else if (data.match(/\"errorReason\"/)) {
+          msg = data.match(/msg=(.+?)\)/) ? data.match(/msg=(.+?)\)/)[1] : ""
+          notify += "\n抽奖失败: " + msg + " ⚠️"
+        } else {
+          notify += "\n抽奖错误: 已输出日志 ⚠️"
+          console.log("爱奇艺会员抽奖失败:\n" + data)
+        }
+        if (data.match(/\"daysurpluschance\":\"(1|2)\"/)) {
+          Lottery(notify)
+        } else {
+          $nobyda.notify("爱奇艺", "", notify)
+        }
+      }
+      resolve()
+    })
+  });
 }
 
 function GetCookie() {
