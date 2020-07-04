@@ -1,13 +1,4 @@
-/*************************
-
-京东多合一签到脚本
-
-更新时间: 2020.6.1 0:10 v1.10
-有效接口: 27+
-脚本兼容: QuantumultX, Surge, Loon, JSBox, Node.js
-电报频道: @NobyDa 
-问题反馈: @NobyDa_bot 
-如果转载: 请注明出处
+https://github.com/NobyDa/Script/blob/master/JD-DailyBonus/JD_DailyBonus.js
 
 *************************
 【 JSbox, Node.js 说明 】 :
